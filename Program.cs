@@ -44,10 +44,12 @@ namespace NeonDreams
 
             if (!Directory.Exists(LDirectory))
             {
-                Raylib.TraceLog(TraceLogLevel.Fatal, $"Lua internal directory is missing! Validate this game using Steam ASAP!");
+                Raylib.TraceLog(TraceLogLevel.Error, $"Lua internal directory is missing! Validate this game using Steam ASAP!");
                 return false;
             }
             
+            // Core files are manually added here
+            // Why? The world will never know
             string[] CoreFiles = new string[]
             {
                 "__hello.lua"
@@ -58,7 +60,7 @@ namespace NeonDreams
                 string FullPath = Path.Combine(LDirectory, file);
                 if (!File.Exists(FullPath))
                 {
-                    Raylib.TraceLog(TraceLogLevel.Fatal, $"Core file {file} is missing!");
+                    Raylib.TraceLog(TraceLogLevel.Error, $"Core file {file} is missing!");
                     return false;
                 }
             }
@@ -84,19 +86,23 @@ namespace NeonDreams
             bool IsInternalLuaOK = InternalLuaSelfTest();
 
             if (!IsModdedLuaOK)
-                throw new Exception("Testing file (assets/mods/template/init.lua) couldn't be loaded!");
-                Environment.Exit(-1);
+                Raylib.TraceLog(TraceLogLevel.Error, "Lua mods have been disabled for this session.");
             
             if (!IsInternalLuaOK)
-                throw new Exception("Core Lua data missing! Neon Dreams cannot continue loading.");
-                Environment.Exit(-1);
+                Raylib.TraceLog(TraceLogLevel.Error, "Core Lua files are missing, the game may experience issues.");
+
+            Raylib.TraceLog(TraceLogLevel.Info, "Creating player...");
+            Player plr = new Player("Name");
 
             // Rendering loop
             while (!Raylib.WindowShouldClose())
             {
+                float dt = Raylib.GetFrameTime();
+                plr.Update(dt);
                 Raylib.BeginDrawing();
                     Raylib.ClearBackground(Color.White);
                     Raylib.DrawFPS(0, 0);
+                    plr.Draw();
                 Raylib.EndDrawing();
             }
         }
